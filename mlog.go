@@ -2,6 +2,7 @@ package mlog
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 )
@@ -75,7 +76,7 @@ func Info(message string, args ...interface{}) {
 		logline := LogLine{
 			Timestamp: createTimeStamp(),
 			AppName:   logger.appName,
-			Level:     "INFO",
+			Level:     "INFO ",
 			Message:   fmt.Sprintf(message, args...),
 		}
 		log(logline)
@@ -88,7 +89,7 @@ func Warn(message string, args ...interface{}) {
 		logline := LogLine{
 			Timestamp: createTimeStamp(),
 			AppName:   logger.appName,
-			Level:     "WARN",
+			Level:     "WARN ",
 			Message:   fmt.Sprintf(message, args...),
 		}
 		log(logline)
@@ -124,7 +125,8 @@ func log(logine LogLine) {
 }
 
 func logJson(logine LogLine) {
-	fmt.Printf("{\"timestamp\":\"%s\",\"appname\":\"%s\",\"level\":\"%s\",\"message\":\"%s\"}\n", logine.Timestamp, logine.AppName, logine.Level, logine.Message)
+	l := strings.TrimSpace(logine.Level)
+	fmt.Printf("{\"timestamp\":\"%s\",\"appname\":\"%s\",\"level\":\"%s\",\"message\":\"%s\"}\n", logine.Timestamp, logine.AppName, l, logine.Message)
 }
 
 func logText(logine LogLine) {
