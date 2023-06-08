@@ -131,7 +131,7 @@ You can set a custom output with:
         msg := strings.NewReader(mlog.ApplyFormat(logline))
         resp, err := http.Post("http://localhost:8080", "text/plain", msg)
 		if err != nil {
-            mlog.MLogError("Error while sending logline to server: %s", err.Error())
+                        mlog.MLogError("Error while sending logline to server: %s", err.Error())
 			return false
 		}
 		return resp.StatusCode == http.StatusOK
