@@ -119,6 +119,11 @@ func SetCustomFormat(log func(LogLine) string) {
 	mlogger.customFormat = log
 }
 
+func SetUseUTC() {
+	create()
+	mlogger.useUTCtime = true
+}
+
 // This will start in memory queue for logs.
 // If the out function returns false, the log will be put back in the queue.
 func AddCustomOutput(out func(LogLine) bool) {

@@ -87,6 +87,13 @@ mlog.SetTimeFormat("2006-01-02 15:04:05")
 ```
 golang time format: https://golang.org/pkg/time/#pkg-constants
 
+### Use UTC Time
+Normaly the local time is used.
+You can change from local to UTC time with:
+```go
+mlog.SetUseUTC()
+```
+
 ### Set format
 There are two formats available:
 ```

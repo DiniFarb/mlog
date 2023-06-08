@@ -17,6 +17,7 @@ type logger struct {
 	format       Format
 	customFormat func(LogLine) string
 	outputQueues []*logQueue
+	useUTCtime   bool
 }
 
 type LogLine struct {
@@ -46,7 +47,11 @@ const (
 )
 
 func createTimeStamp() string {
-	return time.Now().Format(mlogger.timeformat)
+	if mlogger.useUTCtime {
+		return time.Now().UTC().Format(mlogger.timeformat)
+	} else {
+		return time.Now().Format(mlogger.timeformat)
+	}
 }
 
 func formatJson(logine LogLine) string {
@@ -67,6 +72,7 @@ func create() {
 			customFormat: formatDefaultText,
 			format:       Ftext,
 			outputQueues: make([]*logQueue, 0),
+			useUTCtime:   false,
 		}
 	})
 }
