@@ -1,10 +1,11 @@
 # mlog
-An minimal log library for golang. It's simple to use and only meant for stdout logging.
+An minimal log library for golang.
 
     - No fancy coloring
     - Supports log levels
-    - Supports json to stdout
-    - Supports custom log format
+    - Supports json format
+    - Supports custom format
+    - Supports custom output with in memory queue
  
 ## Install
 ```
@@ -100,8 +101,8 @@ mlog.SetFormat(mlog.Fjson)
 ### Set custom format
 You can set a custom format with:
 ```go
-	mlog.SetCustomFormat(func(l mlog.LogLine) {
-		fmt.Println("CUSTOM:", l.Level, l.Message)
+	mlog.SetCustomFormat(func(logline mlog.LogLine) string {
+		return fmt.Sprintf("CUSTOM |%s|%s", logline.Level, logline.Message)
 	})
 ```
 The `LogLine` struct looks like:
@@ -113,3 +114,20 @@ type LogLine struct {
     Message   string
 }
 ```
+
+## SetCustomOutput
+If a custom output is added, the logLine struct will be additionally written to an in memory queue. The queue will be processed in a separate go routine. If the custom output function returns `false` the logline will be retried later. If the custom output function returns `true` the logline will be removed from the queue.
+
+You can set a custom output with:
+```go
+    mlog.AddCustomOutput(func(logline mlog.LogLine) bool {
+        msg := strings.NewReader(mlog.ApplyFormat(logline))
+        resp, err := http.Post("http://localhost:8080", "text/plain", msg)
+		if err != nil {
+            mlog.MLogError("Error while sending logline to server: %s", err.Error())
+			return false
+		}
+		return resp.StatusCode == http.StatusOK
+	})
+```
+

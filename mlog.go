@@ -2,54 +2,14 @@ package mlog
 
 import (
 	"fmt"
-	"strings"
-	"sync"
-	"time"
 )
-
-type Logger struct {
-	timeformat string
-	appName    string
-	level      Level
-	format     Format
-	custom     func(LogLine)
-}
-
-type LogLine struct {
-	Timestamp string `json:"timestamp"`
-	AppName   string `json:"appname"`
-	Level     string `json:"level"`
-	Message   string `json:"message"`
-}
-
-type Format int
-type Level int
-
-const (
-	_ Format = iota
-	Ftext
-	Fjson
-	FCustom
-)
-
-const (
-	_ Level = iota
-	Lerror
-	Lwarn
-	Linfo
-	Ldebug
-	Ltrace
-)
-
-var logger *Logger
-var once sync.Once
 
 func Trace(message string, args ...interface{}) {
 	create()
-	if logger.level >= Ltrace {
+	if mlogger.level >= Ltrace {
 		logline := LogLine{
 			Timestamp: createTimeStamp(),
-			AppName:   logger.appName,
+			AppName:   mlogger.appName,
 			Level:     "TRACE",
 			Message:   fmt.Sprintf(message, args...),
 		}
@@ -59,10 +19,10 @@ func Trace(message string, args ...interface{}) {
 
 func Debug(message string, args ...interface{}) {
 	create()
-	if logger.level >= Ldebug {
+	if mlogger.level >= Ldebug {
 		logline := LogLine{
 			Timestamp: createTimeStamp(),
-			AppName:   logger.appName,
+			AppName:   mlogger.appName,
 			Level:     "DEBUG",
 			Message:   fmt.Sprintf(message, args...),
 		}
@@ -72,10 +32,10 @@ func Debug(message string, args ...interface{}) {
 
 func Info(message string, args ...interface{}) {
 	create()
-	if logger.level >= Linfo {
+	if mlogger.level >= Linfo {
 		logline := LogLine{
 			Timestamp: createTimeStamp(),
-			AppName:   logger.appName,
+			AppName:   mlogger.appName,
 			Level:     "INFO ",
 			Message:   fmt.Sprintf(message, args...),
 		}
@@ -85,10 +45,10 @@ func Info(message string, args ...interface{}) {
 
 func Warn(message string, args ...interface{}) {
 	create()
-	if logger.level >= Lwarn {
+	if mlogger.level >= Lwarn {
 		logline := LogLine{
 			Timestamp: createTimeStamp(),
-			AppName:   logger.appName,
+			AppName:   mlogger.appName,
 			Level:     "WARN ",
 			Message:   fmt.Sprintf(message, args...),
 		}
@@ -98,10 +58,10 @@ func Warn(message string, args ...interface{}) {
 
 func Error(message string, args ...interface{}) {
 	create()
-	if logger.level >= Lerror {
+	if mlogger.level >= Lerror {
 		logline := LogLine{
 			Timestamp: createTimeStamp(),
-			AppName:   logger.appName,
+			AppName:   mlogger.appName,
 			Level:     "ERROR",
 			Message:   fmt.Sprintf(message, args...),
 		}
@@ -109,64 +69,60 @@ func Error(message string, args ...interface{}) {
 	}
 }
 
-func createTimeStamp() string {
-	return time.Now().Format(logger.timeformat)
-}
-
-func log(logine LogLine) {
-	switch logger.format {
-	case Fjson:
-		logJson(logine)
-	case FCustom:
-		logger.custom(logine)
-	default:
-		logText(logine)
+// Used for Errors in MLog itself, can be used in AddCustomOutput f.e.
+func MLogError(message string, args ...interface{}) {
+	logline := LogLine{
+		Timestamp: createTimeStamp(),
+		AppName:   mlogger.appName,
+		Level:     "MLOG ERROR",
+		Message:   fmt.Sprintf(message, args...),
 	}
+	fmt.Println(ApplyFormat(logline))
 }
 
-func logJson(logine LogLine) {
-	l := strings.TrimSpace(logine.Level)
-	fmt.Printf("{\"timestamp\":\"%s\",\"appname\":\"%s\",\"level\":\"%s\",\"message\":\"%s\"}\n", logine.Timestamp, logine.AppName, l, logine.Message)
-}
-
-func logText(logine LogLine) {
-	fmt.Printf("[%s] %s | %s | %s\n", logine.AppName, logine.Timestamp, logine.Level, logine.Message)
-}
-
-func create() {
-	once.Do(func() {
-		logger = &Logger{
-			timeformat: "2006-01-02 15:04:05.000",
-			appName:    "MLOG",
-			level:      Ltrace,
-			custom:     logText,
-			format:     Ftext,
-		}
-	})
+func ApplyFormat(logine LogLine) string {
+	formated := ""
+	switch mlogger.format {
+	case Fjson:
+		formated = formatJson(logine)
+	case FCustom:
+		formated = mlogger.customFormat(logine)
+	default:
+		formated = formatDefaultText(logine)
+	}
+	return formated
 }
 
 func SetAppName(appName string) {
 	create()
-	logger.appName = appName
+	mlogger.appName = appName
 }
 
 func SetLevel(level Level) {
 	create()
-	logger.level = level
+	mlogger.level = level
 }
 
 func SetTimeFormat(timeformat string) {
 	create()
-	logger.timeformat = timeformat
+	mlogger.timeformat = timeformat
 }
 
 func SetFormat(format Format) {
 	create()
-	logger.format = format
+	mlogger.format = format
 }
 
-func SetCustomFormat(log func(LogLine)) {
+func SetCustomFormat(log func(LogLine) string) {
 	create()
-	logger.format = FCustom
-	logger.custom = log
+	mlogger.format = FCustom
+	mlogger.customFormat = log
+}
+
+// This will start in memory queue for logs.
+// If the out function returns false, the log will be put back in the queue.
+func AddCustomOutput(out func(LogLine) bool) {
+	create()
+	queue := newQueue(out)
+	mlogger.outputQueues = append(mlogger.outputQueues, queue)
 }
