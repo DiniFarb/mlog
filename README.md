@@ -13,6 +13,7 @@ go get github.com/dinifarb/mlog
 ```
 
 ## Default Logger Usage
+The default logger has the name `MLOG` and the level `Linfo` and uses `2006-01-02 15:04:05.000` as time format.
 
 ### Text
 ```
@@ -25,8 +26,6 @@ package main
 import "github.com/dinifarb/mlog"
 
 func main(){
-    mlog.Trace("Hello World, Trace!")	
-    mlog.Debug("Hello World, Debug!")
     mlog.Info("Hello World, Info!")
     mlog.Warn("Hello World, Warn!")
     mlog.Error("Hello World, Error!")
@@ -45,8 +44,6 @@ import "github.com/dinifarb/mlog"
 
 func main(){
     mlog.SetFormat(mlog.Fjson)
-    mlog.Trace("Hello World, Trace!")	
-    mlog.Debug("Hello World, Debug!")
     mlog.Info("Hello World, Info!")
     mlog.Warn("Hello World, Warn!")
     mlog.Error("Hello World, Error!")

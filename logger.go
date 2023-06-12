@@ -68,7 +68,7 @@ func create() {
 		mlogger = &logger{
 			timeformat:   "2006-01-02 15:04:05.000",
 			appName:      "MLOG",
-			level:        Ltrace,
+			level:        Linfo,
 			customFormat: formatDefaultText,
 			format:       Ftext,
 			outputQueues: make([]*logQueue, 0),
