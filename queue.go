@@ -3,6 +3,7 @@ package mlog
 import (
 	"math"
 	"sync"
+	"time"
 )
 
 type logQueue struct {
@@ -44,6 +45,7 @@ func (q *logQueue) dequeue() LogLine {
 	q.mu.Lock()
 	defer q.mu.Unlock()
 	if len(q.queue) == 0 {
+		time.Sleep(10 * time.Millisecond)
 		return LogLine{}
 	}
 	logline := q.queue[0]
